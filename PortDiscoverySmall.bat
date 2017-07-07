@@ -34,7 +34,7 @@ echo.
 echo Starting Meili to collect MAC addresses
 echo.
 rmdir /s /q %cd%\log\
-call meili.exe -u %user% -p %pass% -d targetDevice.lst -i shmac.cmd
+call meili.exe -u %user% -p %pass% -d targetDevice.lst -i shmacSmall.cmd
 echo.
 echo Port Discovery complete.
 echo.
@@ -171,7 +171,7 @@ echo.
 echo Starting Meili to collect subnet info
 echo.
 rmdir /s /q %cd%\log\
-call meili.exe -u %user% -p %pass% -d targetDevice.lst -i shvlan.cmd
+call meili.exe -u %user% -p %pass% -d targetDevice.lst -i shvlanSmall.cmd
 echo.
 echo Subnet Discovery complete.
 echo.
@@ -269,7 +269,7 @@ echo.
 echo Starting Meili to collect router info
 echo.
 rmdir /s /q %cd%\log\
-call meili.exe -u %user% -p %pass% -d targetDevice.lst -i routerLookup.cmd
+call meili.exe -u %user% -p %pass% -d targetDevice.lst -i routerLookupSmall.cmd
 echo.
  
 :: Router Name - clean out null characters
