@@ -16,17 +16,19 @@ set "switchIP="
 set "switchPort="
 
 cls
-echo ************************************************************
+echo ************************************************************************
 echo.
-echo Welcome to IP to Switch Port Discovery
+echo                         IP to Switch Port Discovery
 echo.
 set /P ip_addr=IP Address to find? 
 set /P pass=What is your password? 
+
 cls
 echo.
-echo Here we go!
+echo                         IP to Switch Port Discovery
 echo.
-echo ************************************************************
+echo ************************************************************************
+echo.
 
 rem ************************************************************
 rem 147.141.164.35 - done
@@ -54,32 +56,36 @@ rem echo %routerIP%
 
 rem plink to routerIP to set ssh key
 echo.
-echo This is to verify that you have accepted the ssh key,
-echo which will be required later in the discovery process.
+
 echo.
-echo *** Not performing this step _WILL_ result in failure. ***
+echo I am about to connect to the %routerIP% router interface.
+echo This first conection is to verify that we have accepted 
+echo the ssh key, which is needed by a secured shell connection.
 echo.
-echo To prevent this, a new CMD window will now be opened.
-echo Simply enter y to accept the ssh key. 
-echo You will then automatically log into the router.
+echo If required, answer "y" to accept the ssh key. 
+echo You will then be automatically logged into the router.
+echo.
 echo At this point, you should simply enter "exit" 
 echo to leave the router and continue on.
 echo.
-echo We are about to connect to the %routerIP% interface.
 pause
-start plink -ssh %routerIP% -l %user% -pw %pass%
+call plink -ssh %routerIP% -l %user% -pw %pass%
+
+cls
 echo.
-echo Welcome back. 
+echo                         IP to Switch Port Discovery
 echo.
-echo When you are ready to continue, hit Enter.
+echo ************************************************************************
 echo.
-pause
 
 rem Build sharp.txt file
 IF EXIST sharp.txt del /F sharp.txt
 echo sh ip arp %ip_addr% >> sharp.txt
+echo exit >> sharp.txt
 
 rem Make call to router
+echo show ip arp !ip_addr!
+echo.
 IF EXIST rawArp.txt del /F rawArp.txt
 call plink -ssh %user%@%routerIP% -pw %pass%  < sharp.txt > rawArp.txt
 
@@ -101,15 +107,21 @@ for /f "tokens=* delims=" %%s in (rawArp.txt) do (
 		)
 )
 rem echo Router Name: !routerName!
-rem echo MAC: !mac!
+echo.
+echo      !ip_addr! has MAC address !mac!
 rem echo VLAN: !vlan!
-rem echo.
+echo.
 
 rem Build shmacaddadd.txt
 IF EXIST shmacaddadd.txt del /F shmacaddadd.txt
 echo sh mac add add !mac! >> shmacaddadd.txt
+echo exit >> shmacaddadd.txt
 
 rem Make call to router
+echo ************************************************************************
+echo.
+echo show mac address-table address !mac!
+echo.
 IF EXIST rawMac.txt del /F rawMac.txt
 call plink -ssh %user%@%routerIP% -pw %pass%  < shmacaddadd.txt > rawMac.txt
 
@@ -123,13 +135,20 @@ for /f "tokens=* delims=" %%s in (rawMac.txt) do (
 		)
 	)
 )
-rem echo Router Port: !routerPort!
+echo.
+echo      MAC address !mac! is found on router interface !routerPort!
+echo.
 
 rem Build shint.txt
 IF EXIST shint.txt del /F shint.txt
 echo sh int !routerPort! >> shint.txt
+echo exit >> shint.txt
 
 rem Make call to router
+echo ************************************************************************
+echo.
+echo sh interface !routerPort!
+echo.
 IF EXIST rawInt.txt del /F rawInt.txt
 call plink -ssh %user%@%routerIP% -pw %pass%  < shint.txt > rawInt.txt
 
@@ -153,7 +172,9 @@ for /f "tokens=1,4 delims= " %%A in (rawInt1.txt) do (
 		set "switchName=%%B"
 	)
 )
-rem echo Switch Name: !switchName!
+echo.
+echo      !routerPort! connects to switch !switchName!
+echo.
 
 if exist pingScanResults.txt del /f pingScanResults.txt
 ping !switchName! -n 1 -w 100 | find /i "Reply">>pingScanResults.txt
@@ -171,11 +192,19 @@ rem echo !switchName! IP is !switchIP!
 rem Build targetSwitch file
 if exist targetSwitch.txt del /f targetSwitch.txt
 echo !switchName! !switchIP! ssh >> targetSwitch.txt
+
+rem Build shmacaddadd.txt
+IF EXIST shmacaddadd.txt del /F shmacaddadd.txt
+echo sh mac add add !mac! >> shmacaddadd.txt
+
+echo ************************************************************************
 echo.
-echo Starting Meili to find port on !switchName!
+echo Starting Meili to find user port on !switchName!
 echo.
+echo show mac address-table address !mac!
+echo. 
 rmdir /s /q %cd%\log\
-call H:\meili.exe -u %user% -p %pass% -d targetSwitch.txt -i shmacaddadd.txt
+call meili.exe -u %user% -p %pass% -d targetSwitch.txt -i shmacaddadd.txt
 
 :: Treat the rawMacList for any NUL characters, which are show stoppers
 IF EXIST rawSwint.txt del /F rawSwint.txt
@@ -200,67 +229,22 @@ for /f "tokens=2,5 delims= " %%A in (rawSwint1.txt) do (
 		set "switchPort=%%B"
 	)
 )
+cls
 echo.
+echo                         IP to Switch Port Discovery
 echo.
-echo *****************************************
+echo ************************************************************************
 echo.
-echo IP Address !ip_addr! is on
+echo IP Address:  !ip_addr!
 echo.
-echo Switch: !switchName!
+echo Switch:      !switchName!
 echo.
 echo Switch Port: !switchPort!
 echo.
-echo *****************************************
+echo ************************************************************************
+del /f *.txt
 echo.
 echo.
-echo.
-set /p cleanup= Delete discovery files? (y/n)
-set "answer="
-if "%cleanup%"=="y" set answer=1
-if "%cleanup%"=="Y" set answer=1
-if %answer% EQU 1 del /f *.txt
-echo.
-if %answer% EQU 1 echo Cleanup complete.
-echo.
-echo ************************************************************
+pause
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	
-	
-	
 
